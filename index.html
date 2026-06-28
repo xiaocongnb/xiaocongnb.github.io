@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>河南2026年中考成绩查询平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+        body {
+            background-color: #f0f4f9;
+        }
+        .container {
+            width: 600px;
+            margin: 80px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px #ccd6e3;
+        }
+        h1 {
+            text-align: center;
+            color: #2255aa;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        .input-box {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        input {
+            width: 100%;
+            height: 42px;
+            padding: 0 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            height: 45px;
+            background: #2255aa;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 17px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #1a4488;
+        }
+        .score-wrap {
+            margin-top: 30px;
+            display: none;
+        }
+        .score-title {
+            font-size: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #222;
+        }
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 16px;
+        }
+        .total {
+            font-size: 19px;
+            font-weight: bold;
+            color: #d03030;
+            margin-top: 15px;
+        }
+        .tips {
+            color: #999;
+            font-size: 13px;
+            margin-top: 25px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>河南2026年中考成绩查询平台</h1>
+
+        <!-- 登录输入区域 -->
+        <div class="login-box">
+            <div class="input-box">
+                <label>考生姓名</label>
+                <input type="text" id="name" placeholder="请输入考生姓名">
+            </div>
+            <div class="input-box">
+                <label>身份证号</label>
+                <input type="text" id="idCard" placeholder="请输入身份证号">
+            </div>
+            <button onclick="checkScore()">查询成绩</button>
+        </div>
+
+        <!-- 成绩展示区域（默认隐藏） -->
+        <div class="score-wrap" id="scoreBox">
+            <div class="score-title">考生成绩通知单</div>
+            <div class="score-item">
+                <span>考生姓名：</span>
+                <span id="showName"></span>
+            </div>
+            <div class="score-item">
+                <span>身份证号：</span>
+                <span id="showIdCard"></span>
+            </div>
+            <div class="score-item">
+                <span>语文：</span>
+                <span id="chinese"></span>
+            </div>
+            <div class="score-item">
+                <span>数学：</span>
+                <span id="math"></span>
+            </div>
+            <div class="score-item">
+                <span>英语：</span>
+                <span id="english"></span>
+            </div>
+            <div class="score-item">
+                <span>物理：</span>
+                <span id="physics"></span>
+            </div>
+            <div class="score-item">
+                <span>化学：</span>
+                <span id="chemistry"></span>
+            </div>
+            <div class="score-item">
+                <span>道法历史：</span>
+                <span id="politics"></span>
+            </div>
+            <div class="score-item">
+                <span>体育：</span>
+                <span id="sport"></span>
+            </div>
+            <div class="score-item total">
+                <span>总分：</span>
+                <span id="totalScore"></span>
+            </div>
+        </div>
+
+        <div class="tips"></div>
+    </div>
+
+<script>
+// 预设两位考生分数
+const studentData = {
+    "高新新": {
+        total: 249,
+        chinese: 42,
+        math: 38,
+        english: 35,
+        physics: 22,
+        chemistry: 18,
+        politics: 60,
+        sport: 34
+    },
+    "陈家辉": {
+        total: 251,
+        chinese: 43,
+        math: 39,
+        english: 36,
+        physics: 22,
+        chemistry: 19,
+        politics: 60,
+        sport: 32
+    }
+};
+
+function checkScore() {
+    let name = document.getElementById("name").value.trim();
+    let idCard = document.getElementById("idCard").value.trim();
+
+    // 判断是否为空
+    if(name === "" || idCard === "") {
+        alert("请完整填写考生姓名和身份证号！");
+        return;
+    }
+
+    // 判断姓名是否匹配
+    if (!studentData.hasOwnProperty(name)) {
+        alert("姓名或身份证号不正确");
+        return;
+    }
+
+    // 获取对应分数
+    let score = studentData[name];
+
+    // 填充页面信息
+    document.getElementById("showName").innerText = name;
+    document.getElementById("showIdCard").innerText = idCard;
+    document.getElementById("chinese").innerText = score.chinese;
+    document.getElementById("math").innerText = score.math;
+    document.getElementById("english").innerText = score.english;
+    document.getElementById("physics").innerText = score.physics;
+    document.getElementById("chemistry").innerText = score.chemistry;
+    document.getElementById("politics").innerText = score.politics;
+    document.getElementById("sport").innerText = score.sport;
+    document.getElementById("totalScore").innerText = score.total;
+
+    // 展示成绩面板
+    document.getElementById("scoreBox").style.display = "block";
+}
+</script>
+</body>
+</html>

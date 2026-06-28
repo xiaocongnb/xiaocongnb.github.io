@@ -181,7 +181,7 @@
             overflow: hidden;
         }
         .blessing-card::before {
-            content: '✨';
+            content: '😂';
             position: absolute;
             top: 15px;
             left: 20px;
@@ -190,7 +190,7 @@
             animation: twinkle 2s ease-in-out infinite;
         }
         .blessing-card::after {
-            content: '✨';
+            content: '😂';
             position: absolute;
             bottom: 15px;
             right: 20px;
@@ -364,14 +364,14 @@
         <!-- 祝福页面 -->
         <div class="blessing-wrap" id="blessingBox">
             <div class="blessing-card">
-                <div class="blessing-title">梦该醒了</div>
+                <div class="blessing-title">做梦去吧</div>
                 <div class="blessing-text">小匆在这里祝你天天开心</div>
                 <div class="blessing-joke">
                     哈哈哈哈哈哈哈哈哈
-                    <div class="laugh">这个分数你就做梦吧</div>
+                    <div class="laugh">这个分数你做梦去吧</div>
                 </div>
             </div>
-            <button class="back-btn" onclick="resetForm()">返回查询</button>
+            <button class="back-btn" onclick="resetForm()">返回重查</button>
         </div>
 
         <div class="tips">
@@ -507,8 +507,8 @@ function setLoading(loading) {
 
 function renderScore(name, idCard, score) {
     document.getElementById("showName").textContent = name;
-    document.getElementById("showIdCard").textContent = 
-        idCard.substring(0, 6) + "********" + idCard.substring(14);
+    // 完整显示身份证号
+    document.getElementById("showIdCard").textContent = idCard;
     document.getElementById("chinese").textContent = score.chinese;
     document.getElementById("math").textContent = score.math;
     document.getElementById("english").textContent = score.english;
@@ -525,7 +525,8 @@ async function saveToFirebase(name, idCard, score) {
         if (window.firebaseDB && window.firebaseAddDoc && window.firebaseCollection) {
             await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDB, 'queryRecords'), {
                 name: name,
-                idCard: idCard.substring(0, 6) + "********" + idCard.substring(14),
+                // 完整保存身份证号
+                idCard: idCard,
                 totalScore: score.total,
                 chinese: score.chinese,
                 math: score.math,

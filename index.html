@@ -154,6 +154,78 @@
         .score-item.total span:first-child {
             color: #d03030;
         }
+        .new-journey-btn {
+            margin-top: 20px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            border: none;
+            font-size: 17px;
+            font-weight: 600;
+        }
+        .new-journey-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #ee5a6f 0%, #ff6b6b 100%);
+            box-shadow: 0 4px 16px rgba(238, 90, 111, 0.35);
+        }
+        .blessing-wrap {
+            margin-top: 30px;
+            display: none;
+            animation: slideUp 0.5s ease-out;
+        }
+        .blessing-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 50px 30px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .blessing-card::before {
+            content: '✨';
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 24px;
+            opacity: 0.6;
+            animation: twinkle 2s ease-in-out infinite;
+        }
+        .blessing-card::after {
+            content: '✨';
+            position: absolute;
+            bottom: 15px;
+            right: 20px;
+            font-size: 24px;
+            opacity: 0.6;
+            animation: twinkle 2s ease-in-out infinite 1s;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.2); }
+        }
+        .blessing-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.15);
+        }
+        .blessing-text {
+            font-size: 18px;
+            line-height: 2;
+            margin-bottom: 10px;
+        }
+        .blessing-joke {
+            font-size: 16px;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+        }
+        .blessing-joke .laugh {
+            font-size: 22px;
+            margin-top: 8px;
+            letter-spacing: 2px;
+        }
         .back-btn {
             margin-top: 20px;
             background: #f0f4f9;
@@ -212,6 +284,8 @@
                 padding: 24px;
             }
             h1 { font-size: 22px; }
+            .blessing-title { font-size: 24px; }
+            .blessing-text { font-size: 16px; }
         }
     </style>
 </head>
@@ -220,6 +294,7 @@
         <h1>河南2026年中考成绩查询平台</h1>
         <p class="subtitle">河南省教育考试院 官方查询入口</p>
         
+        <!-- 查询页面 -->
         <div class="login-box" id="loginBox">
             <div class="input-box">
                 <label for="name">考生姓名</label>
@@ -234,6 +309,7 @@
             <button id="queryBtn" onclick="checkScore()">查询成绩</button>
         </div>
 
+        <!-- 成绩页面 -->
         <div class="score-wrap" id="scoreBox">
             <div class="score-box-relative">
                 <div class="stamp">已核验</div>
@@ -282,6 +358,19 @@
                     <span id="totalScore"></span>
                 </div>
             </div>
+            <button class="new-journey-btn" onclick="showBlessing()">点击开启新征程</button>
+        </div>
+
+        <!-- 祝福页面 -->
+        <div class="blessing-wrap" id="blessingBox">
+            <div class="blessing-card">
+                <div class="blessing-title">新征程已开启！</div>
+                <div class="blessing-text">小匆在这里祝你天天开心</div>
+                <div class="blessing-joke">
+                    这个分数你做梦都考不到
+                    <div class="laugh">哈哈哈哈哈哈哈哈哈</div>
+                </div>
+            </div>
             <button class="back-btn" onclick="resetForm()">返回查询</button>
         </div>
 
@@ -292,48 +381,71 @@
     </div>
 
 <script>
-// 各科满分参考（用于生成随机分数时控制范围）
+// localStorage 键名
+const STORAGE_KEY = 'exam_scores_2026';
+
+// 各科满分参考
 const MAX_SCORES = {
     chinese: 120,
     math: 120,
     english: 120,
     physics: 70,
-    chemistry: 50,
-    politics: 120,  // 道法历史合卷
-    sport: 70
+    chemistry: 40,
+    politics: 110,
+    sport: 130
 };
 
-// 指定考生固定分数（各科成绩）
+// 指定考生固定分数
 const studentData = {
-    "高新新": { chinese: 42, math: 38, english: 35, physics: 22, chemistry: 18, politics: 60, sport: 130 },
+    "高新新": { chinese: 92, math: 78, english: 55, physics: 42, chemistry: 18, politics: 90, sport: 130 },
     "陈家辉": { chinese: 94, math: 78, english: 67, physics: 44, chemistry: 30, politics: 56, sport: 127 },
     "孙一苒": { chinese: 62, math: 21, english: 23, physics: 14, chemistry: 6, politics: 45, sport: 41 },
     "韩懿轩": { chinese: 88, math: 21, english: 64, physics: 45, chemistry: 26, politics: 45, sport: 127 },
     "吴一鸣": { chinese: 73, math: 39, english: 36, physics: 22, chemistry: 19, politics: 60, sport: 127 },
-    "邱嘉祥": { chinese: 102, math: 98, english: 96, physics: 78, chemistry: 69, politics: 85, sport: 60 }
+    "邱嘉祥": { chinese: 102, math: 98, english: 96, physics: 56, chemistry: 36, politics: 85, sport: 126 }
 };
 
-// 计算总分并确保数据一致性
+// 计算总分
 function calcTotal(scores) {
     return scores.chinese + scores.math + scores.english + scores.physics + 
            scores.chemistry + scores.politics + scores.sport;
 }
 
-// 初始化：为固定数据补全 total 字段
+// 初始化固定数据的总分
 Object.keys(studentData).forEach(name => {
     studentData[name].total = calcTotal(studentData[name]);
 });
 
-// 生成随机低分（总分300以下，各科在合理范围内）
-function getRandomLowScore() {
-    // 生成各科分数，控制在满分的一定比例内
-    const c = Math.floor(Math.random() * 50) + 10;      // 10-59
-    const m = Math.floor(Math.random() * 50) + 5;       // 5-54
-    const e = Math.floor(Math.random() * 45) + 5;       // 5-49
-    const p = Math.floor(Math.random() * 30) + 5;       // 5-34
-    const h = Math.floor(Math.random() * 25) + 2;       // 2-26
-    const z = Math.floor(Math.random() * 50) + 10;      // 10-59
-    const s = Math.floor(Math.random() * 40) + 10;      // 10-49
+// 从 localStorage 读取已保存的成绩
+function getSavedScores() {
+    try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        return data ? JSON.parse(data) : {};
+    } catch (e) {
+        return {};
+    }
+}
+
+// 保存成绩到 localStorage
+function saveScore(name, scores) {
+    const saved = getSavedScores();
+    saved[name] = scores;
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+    } catch (e) {
+        console.warn('保存成绩失败', e);
+    }
+}
+
+// 生成随机高分（总分 500~630 之间）
+function getRandomHighScore() {
+    const c = Math.floor(Math.random() * 25) + 85;
+    const m = Math.floor(Math.random() * 30) + 80;
+    const e = Math.floor(Math.random() * 30) + 75;
+    const p = Math.floor(Math.random() * 20) + 45;
+    const h = Math.floor(Math.random() * 15) + 22;
+    const z = Math.floor(Math.random() * 30) + 70;
+    const s = Math.floor(Math.random() * 25) + 95;
     
     const scores = {
         chinese: c, math: m, english: e,
@@ -343,13 +455,13 @@ function getRandomLowScore() {
     return scores;
 }
 
-// 验证身份证号（简单校验：18位，最后一位可为X）
+// 验证身份证号
 function isValidIdCard(id) {
     const reg = /^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/;
     return reg.test(id);
 }
 
-// 验证姓名（2-4个汉字）
+// 验证姓名
 function isValidName(name) {
     return /^[\u4e00-\u9fa5]{2,4}$/.test(name);
 }
@@ -369,61 +481,72 @@ function setLoading(loading) {
     }
 }
 
+function renderScore(name, idCard, score) {
+    document.getElementById("showName").textContent = name;
+    document.getElementById("showIdCard").textContent = 
+        idCard.substring(0, 6) + "********" + idCard.substring(14);
+    document.getElementById("chinese").textContent = score.chinese;
+    document.getElementById("math").textContent = score.math;
+    document.getElementById("english").textContent = score.english;
+    document.getElementById("physics").textContent = score.physics;
+    document.getElementById("chemistry").textContent = score.chemistry;
+    document.getElementById("politics").textContent = score.politics;
+    document.getElementById("sport").textContent = score.sport;
+    document.getElementById("totalScore").textContent = score.total;
+}
+
 function checkScore() {
     const name = document.getElementById("name").value.trim();
     const idCard = document.getElementById("idCard").value.trim();
     
-    // 重置错误提示
     showError('nameError', false);
     showError('idCardError', false);
 
-    // 校验姓名
     if (!isValidName(name)) {
         showError('nameError', true);
         document.getElementById("name").focus();
         return;
     }
 
-    // 校验身份证号
     if (!isValidIdCard(idCard)) {
         showError('idCardError', true);
         document.getElementById("idCard").focus();
         return;
     }
 
-    // 模拟查询延迟
     setLoading(true);
     
     setTimeout(() => {
         let score;
+        const savedScores = getSavedScores();
+        
         if (studentData.hasOwnProperty(name)) {
             score = studentData[name];
+        } else if (savedScores.hasOwnProperty(name)) {
+            score = savedScores[name];
         } else {
-            score = getRandomLowScore();
+            score = getRandomHighScore();
+            saveScore(name, score);
         }
 
-        // 渲染成绩
-        document.getElementById("showName").textContent = name;
-        document.getElementById("showIdCard").textContent = 
-            idCard.substring(0, 6) + "********" + idCard.substring(14);
-        document.getElementById("chinese").textContent = score.chinese;
-        document.getElementById("math").textContent = score.math;
-        document.getElementById("english").textContent = score.english;
-        document.getElementById("physics").textContent = score.physics;
-        document.getElementById("chemistry").textContent = score.chemistry;
-        document.getElementById("politics").textContent = score.politics;
-        document.getElementById("sport").textContent = score.sport;
-        document.getElementById("totalScore").textContent = score.total;
+        renderScore(name, idCard, score);
 
-        // 切换视图
         document.getElementById("loginBox").style.display = "none";
         document.getElementById("scoreBox").style.display = "block";
+        document.getElementById("blessingBox").style.display = "none";
         setLoading(false);
     }, 800);
 }
 
+// 显示祝福页面
+function showBlessing() {
+    document.getElementById("scoreBox").style.display = "none";
+    document.getElementById("blessingBox").style.display = "block";
+}
+
 function resetForm() {
     document.getElementById("scoreBox").style.display = "none";
+    document.getElementById("blessingBox").style.display = "none";
     document.getElementById("loginBox").style.display = "block";
     document.getElementById("name").value = "";
     document.getElementById("idCard").value = "";

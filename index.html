@@ -91,8 +91,6 @@
 <body>
     <div class="container">
         <h1>河南2026年中考成绩查询平台</h1>
-
-        <!-- 登录输入区域 -->
         <div class="login-box">
             <div class="input-box">
                 <label>考生姓名</label>
@@ -104,8 +102,6 @@
             </div>
             <button onclick="checkScore()">查询成绩</button>
         </div>
-
-        <!-- 成绩展示区域（默认隐藏） -->
         <div class="score-wrap" id="scoreBox">
             <div class="score-title">考生成绩通知单</div>
             <div class="score-item">
@@ -149,32 +145,40 @@
                 <span id="totalScore"></span>
             </div>
         </div>
-
         <div class="tips"></div>
     </div>
-
 <script>
-// 预设两位考生分数
+// 指定四人固定分数
 const studentData = {
     "高新新": {
-        total: 249,
+        total: 345,
         chinese: 42,
         math: 38,
         english: 35,
         physics: 22,
         chemistry: 18,
         politics: 60,
-        sport: 34
+        sport: 130
     },
     "陈家辉": {
-        total: 251,
-        chinese: 43,
-        math: 39,
-        english: 36,
-        physics: 22,
-        chemistry: 19,
-        politics: 60,
-        sport: 32
+        total: 496,
+        chinese: 94,
+        math: 78,
+        english: 67,
+        physics: 44,
+        chemistry: 30,
+        politics: 56,
+        sport: 127
+    }，   
+    "孙一苒": {
+        total: 216,
+        chinese: 62,
+        math: 21,
+        english: 23,
+        physics: 14,
+        chemistry: 6,
+        politics: 45,
+        sport: 41
     },
     "吴一鸣": {
         total: 378,
@@ -185,29 +189,68 @@ const studentData = {
         chemistry: 19,
         politics: 60,
         sport: 127
+    },
+    "邱嘉祥": {
+        total: 588,
+        chinese: 102,
+        math: 98,
+        english: 96,
+        physics: 78,
+        chemistry: 69,
+        politics: 85,
+        sport: 60
     }
 };
+
+// 生成随机总分300以下的各科成绩
+function getRandomLowScore() {
+    // 随机总分150~299
+    let total = Math.floor(Math.random() * 150) + 150;
+    let c = Math.floor(Math.random() * 60);
+    let m = Math.floor(Math.random() * 55);
+    let e = Math.floor(Math.random() * 50);
+    let wl = Math.floor(Math.random() * 35);
+    let hx = Math.floor(Math.random() * 30);
+    let zdls = Math.floor(Math.random() * 70);
+    let ty = total - (c + m + e + wl + hx + zdls);
+    // 防止体育分数负数
+    if (ty < 0) ty = 0;
+    return {
+        total: total,
+        chinese: c,
+        math: m,
+        english: e,
+        physics: wl,
+        chemistry: hx,
+        politics: zdls,
+        sport: ty
+    };
+}
 
 function checkScore() {
     let name = document.getElementById("name").value.trim();
     let idCard = document.getElementById("idCard").value.trim();
 
-    // 判断是否为空
-    if(name === "" || idCard === "") {
+    // 空值判断
+    if (name === "" || idCard === "") {
         alert("请完整填写考生姓名和身份证号！");
         return;
     }
 
-    // 判断姓名是否匹配
-    if (!studentData.hasOwnProperty(name)) {
-        alert("姓名或身份证号不正确");
+    // 姓名长度校验 1~3字
+    if (name.length < 1 || name.length > 3) {
+        alert("请完整填写考生姓名和身份证号！");
         return;
     }
 
-    // 获取对应分数
-    let score = studentData[name];
+    let score;
+    if (studentData.hasOwnProperty(name)) {
+        score = studentData[name];
+    } else {
+        score = getRandomLowScore();
+    }
 
-    // 填充页面信息
+    // 渲染页面
     document.getElementById("showName").innerText = name;
     document.getElementById("showIdCard").innerText = idCard;
     document.getElementById("chinese").innerText = score.chinese;
@@ -219,7 +262,6 @@ function checkScore() {
     document.getElementById("sport").innerText = score.sport;
     document.getElementById("totalScore").innerText = score.total;
 
-    // 展示成绩面板
     document.getElementById("scoreBox").style.display = "block";
 }
 </script>

